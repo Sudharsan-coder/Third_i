@@ -1,0 +1,137 @@
+.at{
+    display: flex;
+    justify-content: center;
+    /* align-items: center; */
+    flex-direction: column;
+    margin-top: 2rem;
+    overflow: hidden;
+}
+.About{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 50px;
+    height: 500px; 
+    margin: 20px;
+    overflow: hidden;
+    /* background-color: aliceblue !important; */
+}
+.a-left{
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    
+}
+.a-right{
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+}
+.our-team{
+    margin-bottom:50px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+}
+.team{
+    display: grid;
+    grid-template-columns: auto auto;
+    column-gap: 130px; 
+    row-gap: 100px; 
+}
+.t{
+    font-size: 49px !important;
+    text-transform: uppercase;
+    color:var(--green) ;
+}
+.card1 {
+    width: 270px;
+    height: 254px;
+    background: #3d3c3c;
+    padding: 2rem 1.5rem;
+    transition: box-shadow .3s ease, transform .2s ease;
+    border-radius: 10px;
+   }
+   
+   .card-info {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    transition: transform .2s ease, opacity .2s ease;
+   }
+   
+   /*Image*/
+   .card-avatar {
+    --size: 150px;
+    /* background: url('../../img/pradeep.png'); */
+    width: var(--size);
+    height: var(--size);
+    border-radius: 50%;
+    transition: transform .2s ease;
+    margin-bottom: 1rem;
+   }
+   
+   
+   /*Card footer*/
+   .card-social {
+    transform: translateY(200%);
+    display: flex;
+    justify-content: space-around;
+    width: 100%;
+    opacity: 0;
+    transition: transform .2s ease, opacity .2s ease;
+   }
+   
+   .card-social__item {
+    list-style: none;
+   }
+   
+   .card-social__item svg {
+    display: block;
+    height: 24px;
+    width: 24px;
+    fill: #515F65;
+    cursor: pointer;
+    transition: fill 0.2s ease ,transform 0.2s ease;
+   }
+   
+   /*Text*/
+   .card-title {
+    color: var(--title);
+    font-size: 1.5em;
+    font-weight: 600;
+    line-height: 2rem;
+   }
+   
+   .card-subtitle {
+    color: var(--sub-text);
+    font-size: 0.8em;
+   }
+   
+   /*Hover*/
+   .card1:hover {
+    box-shadow: 0 8px 50px #23232333;
+   }
+   
+   .card1:hover .card-info {
+    transform: translateY(-5%);
+   }
+   
+   .card1:hover .card-social {
+    transform: translateY(100%);
+    opacity: 1;
+   }
+   
+   .card-social__item svg:hover {
+    fill: #232323;
+    transform: scale(1.1);
+   }
+   
+   .card-avatar:hover {
+    transform: scale(1.1);
+   }

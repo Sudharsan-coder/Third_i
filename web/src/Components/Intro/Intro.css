@@ -1,0 +1,186 @@
+.Intro{
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    /* height: 100vh; */
+}
+.intro{
+    margin-top: 4rem;
+    display: flex;
+    align-items: center;
+    /* background-color: rgb(48, 46, 46) !important; */
+    
+    
+}
+.a-left{
+    flex: 1;
+    position: relative;
+    display: flex;
+    align-items: center;
+    height: 100%;
+}
+.a-left>img{
+    position: relative;
+    /* left: 110px; */
+    border-radius:25% 10% ;
+    /* display: flex;
+    justify-content: center; */
+}
+
+
+
+.a-right{
+    position: relative;
+    flex: 1;
+    display: flex;
+    align-items: center;
+}
+.svg{
+position: absolute;
+left:5px;
+/* transform: rotate(9deg); */
+/* top: 0px; */
+}
+.a-r{
+    
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-left: -30px;
+    position: relative;
+}
+.a-r>:nth-child(1)
+{
+    font-weight: bold;
+    font-size: 3rem;
+    color:var(--green);
+}
+.a-r>:nth-child(2)
+{
+    font-weight: 700;
+    font-size: 25px;
+    /* color: rgb(238, 171, 141); */
+}
+.a-r>:nth-child(3)
+{
+    font-size: 18px;
+    color: rgb(184, 181, 181);
+    padding: 20px ;
+    text-align:justify;
+    padding-right: 100px;
+}
+.a-blurl{
+    top: 1rem;
+    
+}
+b{
+    color:rgb(73, 226, 132);
+}
+
+
+
+.button {
+    --width: 140px;
+    --height: 45px;
+    --tooltip-height: 35px;
+    --tooltip-width: 90px;
+    --gap-between-tooltip-to-button: 18px;
+    --button-color: rgb(73, 226, 132);;
+    --tooltip-color: #fff;
+    width: var(--width);
+    height: var(--height);
+    background: var(--button-color);
+    position: relative;
+    text-align: center;
+    border-radius: 1.45em;
+    font-family: "Arial";
+    transition: background 0.3s;
+  }
+  
+  .button::before {
+    position: absolute;
+    content: attr(data-tooltip);
+    width: var(--tooltip-width);
+    height: var(--tooltip-height);
+    background-color: var(--tooltip-color);
+    font-size: 0.9rem;
+    color: #111;
+    border-radius: 3.25rem;
+    line-height: var(--tooltip-height);
+    bottom: calc(var(--height) + var(--gap-between-tooltip-to-button) + 10px);
+    left: calc(50% - var(--tooltip-width) / 2);
+  }
+  
+  .button::after {
+    position: absolute;
+    content: '';
+    width: 0;
+    height: 0;
+    border: 10px solid transparent;
+    border-top-color: var(--tooltip-color);
+    left: calc(50% - 10px);
+    bottom: calc(100% + var(--gap-between-tooltip-to-button) - 10px);
+  }
+  
+  .button::after,.button::before {
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.5s;
+  }
+  
+  .text {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .button-wrapper,.text,.icon {
+    overflow: hidden;
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    left: 0;
+    color: #fff;
+  }
+  
+  .text {
+    top: 0
+  }
+  
+  .text,.icon {
+    transition: top 0.5s;
+  }
+  
+  .icon {
+    color: #fff;
+    top: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .button:hover {
+    background: #18ffc5;
+  }
+  
+  .button:hover .text {
+    top: -100%;
+  }
+  
+  .button:hover .icon {
+    top: 0;
+  }
+  
+  .button:hover:before,.button:hover:after {
+    opacity: 1;
+    visibility: visible;
+  }
+  
+  .button:hover:after {
+    bottom: calc(var(--height) + var(--gap-between-tooltip-to-button) - 20px);
+  }
+  
+  .button:hover:before {
+    bottom: calc(var(--height) + var(--gap-between-tooltip-to-button));
+  }
+  

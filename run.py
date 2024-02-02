@@ -5,20 +5,21 @@ import face_recognition
 import os
 from datetime import datetime
 import time
+import streamlit as st
 
-def rate(r):
+def rate(r,voice):
     voice.setProperty("rate",r)
     
 def change(voice):
     voices=voice.getProperty("voices")
     voice.setProperty("voice",voices[1].id)
     
-def speak(text):
+def speak(text,voice):
     voice.say(text)
     voice.runAndWait()
+    voice.stop()
 
-voice=pyttsx3.init()
-change(voice)
+
 
 # Distance constants 
 KNOWN_DISTANCE = 55
@@ -56,10 +57,12 @@ def object_detector(image):
     data_list =[]
     
     for (classid, score, box) in zip(classes, scores, boxes):
+        print(classid)
         # define color of each, object based on its class id 
         color= COLORS[int(classid) % len(COLORS)]
     
-        label = "%s : %f" % (class_names[classid[0]], score)
+        label = "%s : %f" % (class_names[classid], score)
+        # label = "%s : %f" % ("sudha", score)
 
         # draw rectangle on and label on object
         cv.rectangle(image, box, color, 2)
@@ -68,10 +71,10 @@ def object_detector(image):
         # getting the data 
         # 1: class name  2: object width in pixels, 3: position where have to draw text(distance)
         if classid ==0: # person class id 
-            data_list.append([class_names[classid[0]], box[2], (box[0], box[1]-2)])
+            data_list.append([class_names[classid], box[2], (box[0], box[1]-2)])
             
         elif classid ==67:
-            data_list.append([class_names[classid[0]], box[2], (box[0], box[1]-2)])
+            data_list.append([class_names[classid], box[2], (box[0], box[1]-2)])
        
         # if you want inclulde more classes then you have to simply add more [elif] statements here
         # returning list containing the object data. 
@@ -127,67 +130,86 @@ print('Encoding Complete')
 previous_time=0.0
 cap = cv.VideoCapture(0)
 
+st.title("Object Detection and Face Recognition App")
+st.sidebar.header("Settings")
+st.sidebar.slider("Confidence Threshold", 0.0, 1.0, 0.4, key="confidence_threshold")
+st.sidebar.slider("NMS Threshold", 0.0, 1.0, 0.3, key="nms_threshold")
 
-while True:
-    
-    ret, frame = cap.read()
+image_placeholder = st.empty()
+stop=st.button("STOP")
+if st.checkbox("Start Detection",key="test"):
+    while True:
+        if(stop):
+            break
+        ret, frame = cap.read()
 
-    #face recognition
-    imgS = cv.resize(frame, (0, 0), None, 0.25, 0.25)
-    imgS = cv.cvtColor(imgS, cv.COLOR_BGR2RGB)
+        #face recognition
+        imgS = cv.resize(frame, (0, 0), None, 0.25, 0.25)
+        imgS = cv.cvtColor(imgS, cv.COLOR_BGR2RGB)
 
-    facesCurFrame = face_recognition.face_locations(imgS)
-    encodesCurFrame = face_recognition.face_encodings(imgS, facesCurFrame)
-    name=None
-    
-    for encodeFace, faceLoc in zip(encodesCurFrame, facesCurFrame):
-        matches = face_recognition.compare_faces(encodeListKnown, encodeFace)
-        faceDis = face_recognition.face_distance(encodeListKnown, encodeFace)
-
-        matchIndex = np.argmin(faceDis)
-
-        if matches[matchIndex]:
-            name = classNames[matchIndex].upper()
-            # print(name)
+        facesCurFrame = face_recognition.face_locations(imgS)
+        encodesCurFrame = face_recognition.face_encodings(imgS, facesCurFrame)
+        name=None
         
-    #distance
-    current_time=time.time()
-    if name in classNames:
-        if current_time-previous_time>60: 
-            previous_time=current_time
-            rate(190)
-            speak(f'{name} is here')
-            voice.runAndWait()
-    else:
-        distance=0
-        data = object_detector(frame) 
-        
-        for d in data:
-            if d[0] =='person':
-                distance = distance_finder(focal_person, PERSON_WIDTH, d[1])
-                x, y = d[2]
-            elif d[0] =='cell phone':
-                distance = distance_finder (focal_mobile, MOBILE_WIDTH, d[1])
-                x, y = d[2]
+        for encodeFace, faceLoc in zip(encodesCurFrame, facesCurFrame):
+            matches = face_recognition.compare_faces(encodeListKnown, encodeFace)
+            faceDis = face_recognition.face_distance(encodeListKnown, encodeFace)
 
-            cv.rectangle(frame, (x, y-3), (x+150, y+23),BLACK,-1 )
-            cv.putText(frame, f'Dis: {round(distance,2)} inch', (x+5,y+13), FONTS, 0.48, GREEN, 2)
-        
-        if(distance<40 and distance!=0):
-            rate(225)
-            speak('danger')
-            speak('danger')
-            speak('danger')
-            voice.runAndWait()
-        elif(distance<50 and distance!=0):
-            rate(150)
-            speak('danger')
-            voice.runAndWait()
-        
-    if cv.waitKey(1) & 0xFF == ord('s'):
-        break
-    cv.imshow('frame',frame)
-    
-   
-cap.release()
-cv.destroyAllWindows()
+            matchIndex = np.argmin(faceDis)
+
+            if matches[matchIndex]:
+                name = classNames[matchIndex].upper()
+                # print(name)
+            
+        #distance
+        current_time=time.time()
+        if name in classNames:
+            if current_time-previous_time>60: 
+                previous_time=current_time
+                voice=pyttsx3.init()
+                change(voice)
+                rate(190,voice)
+                speak(f'{name} is here',voice)
+                # voice.runAndWait()
+        else:
+            distance=0
+            data = object_detector(frame) 
+            
+            for d in data:
+                if d[0] =='person':
+                    distance = distance_finder(focal_person, PERSON_WIDTH, d[1])
+                    x, y = d[2]
+                elif d[0] =='cell phone':
+                    distance = distance_finder (focal_mobile, MOBILE_WIDTH, d[1])
+                    x, y = d[2]
+
+                cv.rectangle(frame, (x, y-3), (x+150, y+23),BLACK,-1 )
+                cv.putText(frame, f'Dis: {round(distance,2)} inch', (x+5,y+13), FONTS, 0.48, GREEN, 2)
+            
+            if(distance<40 and distance!=0):
+                voice=pyttsx3.init()
+                change(voice)
+                rate(225,voice)
+                speak('danger',voice)
+                # speak('danger',voice)
+                # speak('danger',voice)
+                # voice.runAndWait()
+
+            elif(distance<180 and distance!=0):
+                voice=pyttsx3.init()
+                change(voice)
+                rate(150,voice)
+                speak('danger',voice)
+                # voice.runAndWait()
+            
+        if cv.waitKey(1) & 0xFF == ord('s'):
+            break
+        cv.imshow('frame',frame)
+        # st.image(frame, channels="BGR", use_column_width=True)
+        image_placeholder.image(frame, channels="BGR", use_column_width=True)
+    cap.release()
+    cv.destroyAllWindows()
+if(stop):
+    print("stoping the camera")
+    cap.release()
+    cv.destroyAllWindows()

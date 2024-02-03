@@ -1,7 +1,11 @@
-cmake
-dlib
-face_recognition
 pyttsx3
 numpy
-opencv-python
 streamlit
+
+
+opencv-python
+cmake
+pyyaml
+
+#Fork of face_recognition using prebuild dlib library instead
+face_recognition @ git+https://github.com/thetoby9944/face_recognition

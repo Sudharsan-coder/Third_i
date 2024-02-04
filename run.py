@@ -6,20 +6,30 @@ import os
 from datetime import datetime
 import time
 import streamlit as st
+import speech_recognition as sr
+import google.generativeai as genai
 
+info=[]
+# Create a recognizer object
+genai.configure(api_key="AIzaSyANdqhVp9WBc0JifgCH320XU_5vPdbCAVU")
+recognizer = sr.Recognizer()
+
+# Function to recognize speech
+def gemini_response(prompt,question):
+    model=genai.GenerativeModel("gemini-pro")
+    response=model.generate_content([prompt,question])
+    return response.text
 def rate(r,voice):
     voice.setProperty("rate",r)
     
 def change(voice):
     voices=voice.getProperty("voices")
-    voice.setProperty("voice",voices[1].id)
+    voice.setProperty("voice",voices[2].id)
     
 def speak(text,voice):
     voice.say(text)
     voice.runAndWait()
     voice.stop()
-
-
 
 # Distance constants 
 KNOWN_DISTANCE = 55
@@ -128,22 +138,106 @@ for img in images:
 
 print('Encoding Complete')
 previous_time=0.0
-cap = cv.VideoCapture(0)
 
 st.title("Object Detection and Face Recognition App")
 st.sidebar.header("Settings")
-st.sidebar.slider("Confidence Threshold", 0.0, 1.0, 0.4, key="confidence_threshold")
-st.sidebar.slider("NMS Threshold", 0.0, 1.0, 0.3, key="nms_threshold")
+threshold=st.sidebar.slider("Confidence Threshold", 0.0, 1.0, 0.4, key="confidence_threshold")
+# st.sidebar.slider("NMS Threshold", 0.0, 1.0, 0.3, key="nms_threshold")
 
 image_placeholder = st.empty()
-stop=st.button("STOP")
-if st.checkbox("Start Detection",key="test"):
-    while True:
-        if(stop):
-            break
+# stop=st.button("STOP")
+start= st.checkbox("Start Detection",key="test")
+if(start):
+    cap = cv.VideoCapture(0)
+    while start:
+        info.clear()
+        # if(stop):
+        #     break
         ret, frame = cap.read()
 
         #face recognition
+        if ret:
+            imgS = cv.resize(frame, (0, 0), None, 0.25, 0.25)
+            imgS = cv.cvtColor(imgS, cv.COLOR_BGR2RGB)
+
+            facesCurFrame = face_recognition.face_locations(imgS)
+            encodesCurFrame = face_recognition.face_encodings(imgS, facesCurFrame)
+            name=None
+            
+            for encodeFace, faceLoc in zip(encodesCurFrame, facesCurFrame):
+                matches = face_recognition.compare_faces(encodeListKnown, encodeFace)
+                faceDis = face_recognition.face_distance(encodeListKnown, encodeFace)
+
+                matchIndex = np.argmin(faceDis)
+
+                if matches[matchIndex]:
+                    name = classNames[matchIndex].upper()
+                    # print(name)
+                
+            #distance
+            current_time=time.time()
+            if name in classNames:
+                if current_time-previous_time>60: 
+                    previous_time=current_time
+                    voice=pyttsx3.init()
+                    change(voice)
+                    rate(190,voice)
+                    speak(f'{name} is here',voice)
+                    # voice.runAndWait()
+            else:
+                distance=0
+                data = object_detector(frame) 
+                # print("data:",data)
+                for d in data:
+                    distance="unknown"
+                    if d[0] =='person':
+                        distance = distance_finder(focal_person, PERSON_WIDTH, d[1])
+                        x, y = d[2]
+                    elif d[0] =='cell phone':
+                        distance = distance_finder (focal_mobile, MOBILE_WIDTH, d[1])
+                        x, y = d[2]
+                    info.append("{} is {} feets away from you".format(d[0],distance))
+                    cv.rectangle(frame, (x, y-3), (x+150, y+23),BLACK,-1 )
+                    cv.putText(frame, f'Dis: {round(distance,2)} inch', (x+5,y+13), FONTS, 0.48, GREEN, 2)
+                # print("distance:",distance)
+                if(distance<40 and distance!=0):
+                    voice=pyttsx3.init()
+                    change(voice)
+                    rate(225,voice)
+                    speak('danger',voice)
+                    # speak('danger',voice)
+                    # speak('danger',voice)
+                    # voice.runAndWait()
+
+                elif(distance<70 and distance!=0):
+                    voice=pyttsx3.init()
+                    change(voice)
+                    rate(150,voice)
+                    speak('danger',voice)
+                    # voice.runAndWait()
+            if cv.waitKey(1) & 0xFF == ord('s'):
+                break
+            cv.imshow('frame',frame)
+            # st.image(frame, channels="BGR", use_column_width=True)
+            image_placeholder.image(frame, channels="BGR", use_column_width=True)
+            if(info):
+                print(info)    
+        else:
+            pass
+    cap.release()
+    cv.destroyAllWindows()
+# if(stop):
+#     print("stoping the camera")
+#     cap.release()
+#     cv.destroyAllWindows()
+
+
+def get_img_info():
+    info.clear()
+    cap = cv.VideoCapture(0)
+    ret, frame = cap.read()
+    #face recognition
+    if ret:
         imgS = cv.resize(frame, (0, 0), None, 0.25, 0.25)
         imgS = cv.cvtColor(imgS, cv.COLOR_BGR2RGB)
 
@@ -162,54 +256,56 @@ if st.checkbox("Start Detection",key="test"):
                 # print(name)
             
         #distance
-        current_time=time.time()
-        if name in classNames:
-            if current_time-previous_time>60: 
-                previous_time=current_time
-                voice=pyttsx3.init()
-                change(voice)
-                rate(190,voice)
-                speak(f'{name} is here',voice)
-                # voice.runAndWait()
-        else:
-            distance=0
-            data = object_detector(frame) 
-            
-            for d in data:
-                if d[0] =='person':
-                    distance = distance_finder(focal_person, PERSON_WIDTH, d[1])
-                    x, y = d[2]
-                elif d[0] =='cell phone':
-                    distance = distance_finder (focal_mobile, MOBILE_WIDTH, d[1])
-                    x, y = d[2]
-
-                cv.rectangle(frame, (x, y-3), (x+150, y+23),BLACK,-1 )
-                cv.putText(frame, f'Dis: {round(distance,2)} inch', (x+5,y+13), FONTS, 0.48, GREEN, 2)
-            
-            if(distance<40 and distance!=0):
-                voice=pyttsx3.init()
-                change(voice)
-                rate(225,voice)
-                speak('danger',voice)
-                # speak('danger',voice)
-                # speak('danger',voice)
-                # voice.runAndWait()
-
-            elif(distance<180 and distance!=0):
-                voice=pyttsx3.init()
-                change(voice)
-                rate(150,voice)
-                speak('danger',voice)
-                # voice.runAndWait()
-            
-        if cv.waitKey(1) & 0xFF == ord('s'):
-            break
-        cv.imshow('frame',frame)
-        # st.image(frame, channels="BGR", use_column_width=True)
-        image_placeholder.image(frame, channels="BGR", use_column_width=True)
+    
+        distance=0
+        data = object_detector(frame) 
+        # print("data:",data)
+        for d in data:
+            distance="unknown"
+            if d[0] =='person':
+                distance = distance_finder(focal_person, PERSON_WIDTH, d[1])
+                x, y = d[2]
+            elif d[0] =='cell phone':
+                distance = distance_finder (focal_mobile, MOBILE_WIDTH, d[1])
+                x, y = d[2]
+            info.append("{} is {} feets away from you".format(d[0],int(distance)))
+            cv.rectangle(frame, (x, y-3), (x+150, y+23),BLACK,-1 )
+            cv.putText(frame, f'Dis: {round(distance,2)} inch', (x+5,y+13), FONTS, 0.48, GREEN, 2)
+        print(info)    
+    else:
+        pass
     cap.release()
-    cv.destroyAllWindows()
-if(stop):
-    print("stoping the camera")
-    cap.release()
-    cv.destroyAllWindows()
+    # cv.destroyAllWindows()
+    return info
+
+# if(st.button("get info")):
+#     res=get_img_info()
+#     print(res)
+#     st.subheader(res)
+
+
+def recognize_speech():
+    with sr.Microphone() as source:
+        print("Say something...")
+        recognizer.adjust_for_ambient_noise(source, duration=1)  # Adjust for ambient noise
+        audio = recognizer.listen(source, timeout=5)  # Listen for up to 5 seconds
+    try:
+        print("Recognizing...")
+        text = recognizer.recognize_google(audio)  # Use Google Web Speech API for recognition
+        print("You said:", text)
+        img_info=get_img_info()
+        res=gemini_response("You are an assistante for helping the visually blind people, the sentences said by them and the objects around them will be give to you with their distance from them, your task is to response to generate a single line statament which includes all the provided informations, those sentence should be accurate, don't give false stataments.","sentence dais by them:{}, surrounding informations : {}".format(text,img_info))
+        print(res)
+        voice=pyttsx3.init()
+        change(voice)
+        rate(120,voice)
+        speak(res,voice)
+    except sr.UnknownValueError:
+        print("Sorry, could not understand audio.")
+    except sr.RequestError as e:
+        print(f"Could not request results from Google Web Speech API; {e}")
+
+# Call the function to recognize speech
+listern=st.button("Listern",key="listern")
+if(listern):
+    recognize_speech()
